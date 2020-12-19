@@ -1,0 +1,92 @@
+Deploy de uma VM com Docker no Azure
+
+Primeiramente será necessário a instalação do docker machine de acordo com seu Sistema Operacional, eu utilizei no Windows, mas caso tenha outro S.O segue 
+o link da página do docker que explica como fazer: https://docs.docker.com/machine/install-machine/
+
+Instalação do docker machine
+base=https://github.com/docker/machine/releases/download/v0.16.0 && base=https://github.com/docker/machine/releases/download/v0.16.0 && mkdir -p "$HOME/bin" && curl -L $base/docker-machine-Windows-x86_64.exe > "$HOME/bin/docker-machine.exe" && chmod +x "$HOME/bin/docker-machine.exe"
+241 base=https://github.com/docker/machine/releases/download/v0.16.0 && mkdir -p "$HOME/bin" && curl -L $base/docker-machine-Windows-x86_64.exe > "$HOME/bin/docker-machine.exe" && chmod +x "$HOME/bin/docker-machine.exe"
+
+
+Verificar a versão
+#docker-machine --version
+
+Para fazer a conexão com o azure será necessário saber o id da sua subscription no portal do azure procure por subscription ID. 
+Mas também pode utilizar o seguinte comando: az account show --query "id" -o tsv no cloud powershell.
+
+Conexão com sua subscription do azure e criação da vm
+
+docker-machine create --driver azure --azure-subscription-id (seu_id) vm-docker-teste. Ele irá te informar um endereço https é um código
+
+$ docker-machine create --driver azure --azure-subscription-id (seu_id---------------) vm-docker-teste
+Running pre-create checks...
+(vm-docker-teste) Microsoft Azure: To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code R22XXXXXXXX to authenticate
+
+
+Ele irá solicitar para você se conectar na sua conta do azure
+
+Comando para Criação da VM
+De todos os parâmetros o único obrigatório é o ID da subscrription, na documentação consta todos os parâmetros a serem utilizados.
+Neste exemplo usei apenas o resource group, deixei os outros default.
+docker-machine create --driver azure --azure-subscription-id (seu-id) --azure-resource-group labdocker vm-docker-teste
+
+
+$ docker-machine create --driver azure --azure-subscription-id (seu_id---------------) --azure-resource-group labdocker vm-docker-teste
+Running pre-create checks...
+(vm-docker-teste) Microsoft Azure: To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code RTR42CMBM to authenticate.
+(vm-docker-teste) Completed machine pre-create checks.
+Creating machine...
+(vm-docker-teste) Querying existing resource group. name="labdocker"
+(vm-docker-teste) Resource group "labdocker" already exists.
+(vm-docker-teste) Configuring availability set. name="docker-machine"
+(vm-docker-teste) Configuring network security group. name="vm-docker-teste-firewall" location="westus"
+(vm-docker-teste) Querying if virtual network already exists. name="docker-machine-vnet" rg="labdocker" location="westus"
+(vm-docker-teste) Creating virtual network. name="docker-machine-vnet" rg="labdocker" location="westus"
+(vm-docker-teste) Configuring subnet. vnet="docker-machine-vnet" cidr="192.168.0.0/16" name="docker-machine"
+(vm-docker-teste) Creating public IP address. name="vm-docker-teste-ip" static=false
+(vm-docker-teste) Creating network interface. name="vm-docker-teste-nic"
+(vm-docker-teste) Creating storage account. name="vhdsfrhzu0hxqsym3bl3lvd2" location="westus" sku=Standard_LRS
+(vm-docker-teste) Creating virtual machine. name="vm-docker-teste" location="westus" size="Standard_A2" username="docker-user" osImage="canonical:UbuntuServer:16.04.0-LTS:latest"
+Waiting for machine to be running, this may take a few minutes...
+Detecting operating system of created instance...
+Waiting for SSH to be available...
+Detecting the provisioner...
+Provisioning with ubuntu(systemd)...
+Installing Docker...
+Copying certs to the local machine directory...
+Copying certs to the remote machine...
+
+
+Lista todas as VM’s
+$ docker-machine ls
+NAME ACTIVE DRIVER STATE URL SWARM DOCKER ERRORS
+myvm - azure Running tcp://40.112.170.215:2376 v20.10.1
+vm-docker-teste - azure Running tcp://40.112.251.6:2376 v20.10.1
+vm-dockerteste - azure Running tcp://137.135.58.17:2376 v20.10.1
+
+
+Verifica o IP da sua VM
+$ docker-machine ip vm-docker-teste
+40.112.X.X
+
+Faz o acesso a VM
+$ docker-machine ssh vm-docker-teste
+Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.15.0-1098-azure x86_64)
+* Documentation: https://help.ubuntu.com
+* Management: https://landscape.canonical.com
+* Support: https://ubuntu.com/advantage
+
+Criação do container
+root@vm-docker-teste:/home/docker-user# docker ps
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+root@vm-docker-teste:/home/docker-user# docker run -ti ubuntu
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+da7391352a9b: Extracting [=================================================> ] 28.31MB/28.56MB
+14428a6d4bcd: Download complete
+2c2d948710f2: Download complete
+
+Containers em execução
+root@vm-docker-teste:/home/docker-user# docker container ls
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+85107bec80a4 ubuntu "/bin/bash" 56 seconds ago Up 53 seconds romantic_visvesvaraya
